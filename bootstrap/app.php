@@ -18,6 +18,12 @@ return Application::configure(basePath: dirname(__DIR__))
         health: '/up',
     )
     ->withMiddleware(function (Middleware $middleware): void {
+        // The app always sits behind a reverse proxy (nginx, Cloudflare, or a
+        // tunnel), which terminates TLS and forwards plain HTTP. Without this,
+        // Laravel builds http:// asset URLs on an https:// page and the browser
+        // blocks every one of them as mixed content.
+        $middleware->trustProxies(at: '*');
+
         $middleware->encryptCookies(except: ['appearance', 'sidebar_state']);
 
         $middleware->validateCsrfTokens(except: ['payment/callback']);
