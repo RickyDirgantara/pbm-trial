@@ -8,8 +8,14 @@ on:
 jobs:
   build:
     runs-on: ubuntu-latest
+    outputs:
+      vps-configured: ${{ steps.vps.outputs.configured }}
     steps:
       - uses: actions/checkout@v4
+      # Projects hosted elsewhere (e.g. Vercel) leave the VPS secrets unset;
+      # the deploy job below is skipped rather than failing on every push.
+      - id: vps
+        run: echo "configured=${{ secrets.VPS_HOST != '' }}" >> "$GITHUB_OUTPUT"
       - uses: shivammathur/setup-php@v2
         with:
           php-version: '8.4'
@@ -24,14 +30,17 @@ jobs:
       - run: composer validate --strict
       - run: composer ci:check
       - run: npm run build
-      - run: tar --exclude=.git --exclude=.env --exclude=node_modules --exclude=vendor --exclude=storage/logs -czf release.tar.gz .
+      # Written outside the workspace: an archive created inside the directory
+      # it is reading makes tar exit 1 with "file changed as we read it".
+      - run: tar --exclude=.git --exclude=.env --exclude=node_modules --exclude=vendor --exclude=storage/logs -czf "${RUNNER_TEMP}/release.tar.gz" .
       - uses: actions/upload-artifact@v4
         with:
           name: release
-          path: release.tar.gz
+          path: ${{ runner.temp }}/release.tar.gz
 
   deploy:
     needs: build
+    if: needs.build.outputs.vps-configured == 'true'
     runs-on: ubuntu-latest
     environment: production
     steps:
