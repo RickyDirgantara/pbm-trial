@@ -34,9 +34,16 @@ export default defineConfig(({ command }) => ({
             },
         }),
         tailwindcss(),
-        wayfinder({
-            formVariants: true,
-        }),
+        // Wayfinder shells out to `php artisan wayfinder:generate`. Vercel's Node
+        // build container has no PHP, so the plugin is skipped there and the
+        // generated route helpers are read from the committed copies instead.
+        ...(process.env.VERCEL
+            ? []
+            : [
+                  wayfinder({
+                      formVariants: true,
+                  }),
+              ]),
         // Add Gzip and Brotli compression
         compression({ algorithm: 'gzip', exclude: [/\.(br)$/, /\.(gz)$/] }),
         compression({ algorithm: 'brotliCompress', exclude: [/\.(br)$/, /\.(gz)$/] }),
