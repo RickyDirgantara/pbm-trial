@@ -12,8 +12,8 @@ jobs:
       vps-configured: ${{ steps.vps.outputs.configured }}
     steps:
       - uses: actions/checkout@v4
-      # Projects hosted elsewhere (e.g. Vercel) leave the VPS secrets unset;
-      # the deploy job below is skipped rather than failing on every push.
+      # Until a VPS is provisioned the deploy secrets are unset, so the deploy
+      # job below is skipped rather than failing on every push.
       - id: vps
         run: echo "configured=${{ secrets.VPS_HOST != '' }}" >> "$GITHUB_OUTPUT"
       - uses: shivammathur/setup-php@v2
