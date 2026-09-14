@@ -7,7 +7,12 @@ import { bunny } from 'laravel-vite-plugin/fonts';
 import { defineConfig } from 'vite';
 import { compression } from 'vite-plugin-compression2';
 
-export default defineConfig({
+export default defineConfig(({ command }) => ({
+    // A few elements reference images from CSS (`background-image: url(/assets/...)`).
+    // In `vite dev` the stylesheet is served from the Vite origin, so those
+    // root-relative URLs must resolve there too. Stays `false` for `vite build`,
+    // where Laravel serves both the CSS and public/ from the same origin.
+    publicDir: command === 'serve' ? 'public' : false,
     plugins: [
         laravel({
             input: ['resources/css/app.css', 'resources/js/app.tsx'],
@@ -54,4 +59,4 @@ export default defineConfig({
         },
         chunkSizeWarningLimit: 1000,
     }
-});
+}));
